@@ -1,8 +1,17 @@
 const { getStore } = require("@netlify/blobs");
 
+function openStore(name) {
+  const siteID = process.env.BLOBS_SITE_ID || process.env.NETLIFY_SITE_ID;
+  const token = process.env.BLOBS_TOKEN || process.env.NETLIFY_AUTH_TOKEN;
+  if (siteID && token) {
+    return getStore({ name, siteID, token });
+  }
+  return getStore(name);
+}
+
 exports.handler = async () => {
   try {
-    const store = getStore("checkins");
+    const store = openStore("checkins");
     const { blobs } = await store.list({ prefix: "member:" });
 
     const members = await Promise.all(

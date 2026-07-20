@@ -1,6 +1,15 @@
 const crypto = require("crypto");
 const { getStore } = require("@netlify/blobs");
 
+function openStore(name) {
+  const siteID = process.env.BLOBS_SITE_ID || process.env.NETLIFY_SITE_ID;
+  const token = process.env.BLOBS_TOKEN || process.env.NETLIFY_AUTH_TOKEN;
+  if (siteID && token) {
+    return getStore({ name, siteID, token });
+  }
+  return getStore(name);
+}
+
 const KEEP_WEEKS = 30; // roughly 7 months of history
 const COLORS = new Set(["green", "yellow", "red"]);
 
@@ -74,7 +83,7 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "That name did not work, try again." }) };
     }
 
-    const store = getStore("checkins");
+    const store = openStore("checkins");
     const key = `member:${slug}`;
     const existing = await store.get(key, { type: "json" });
     const pinHash = hashPin(pin);
