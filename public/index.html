@@ -99,6 +99,13 @@ const STATUS = {
 };
 const KEEP_WEEKS = 30;
 const ME_KEY = "hfos_me_v1";
+// Names in here never get asked for a status, they just monitor the board.
+// Add more slugs here later if someone else needs the same view.
+const ADMIN_SLUGS = new Set(["vlad"]);
+
+function slugify(str) {
+  return String(str).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
 
 function isoWeek(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -174,6 +181,16 @@ function render() {
         <div class="field"><input id="pinInput" inputmode="numeric" maxlength="8" placeholder="Pick a 4 digit code" value="${escapeAttr(state.pinInput)}" /></div>
         <button class="btn" id="claimBtn" ${state.saving ? "disabled" : ""}>${state.saving ? "Saving..." : "That's me"}</button>
         ${state.err ? `<p class="err">${escapeHtml(state.err)}</p>` : ""}
+      </div>
+    `;
+  } else if (me.admin) {
+    identityHtml = `
+      <div class="card">
+        <div class="row-between">
+          <h2>Welcome back, ${escapeHtml(me.name)}.</h2>
+          <button class="btn-ghost" id="notYouBtn">Not you?</button>
+        </div>
+        <p class="hint">You're on the monitoring view, no status needed from you. Just the team's.</p>
       </div>
     `;
   } else {
@@ -287,8 +304,20 @@ function wireEvents() {
 
 async function doClaim() {
   const name = state.nameInput.trim();
-  const pin = state.pinInput.trim();
   if (!name) { state.err = "Type your name first."; render(); return; }
+
+  const slug = slugify(name);
+  if (ADMIN_SLUGS.has(slug)) {
+    setMe({ slug, name, admin: true });
+    state.me = getMe();
+    state.pickedColor = null;
+    state.note = "";
+    state.err = "";
+    render();
+    return;
+  }
+
+  const pin = state.pinInput.trim();
   if (pin.length < 4) { state.err = "Your code needs at least 4 digits."; render(); return; }
   state.saving = true; state.err = ""; render();
   try {
