@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>High Freedom OS · Sunday Check-in</title>
+<meta name="description" content="Weekly traffic light check-in for High Freedom OS members." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1C3A2E;
+    --green-deep: #12281F;
+    --cream: #F6F1E7;
+    --cream-soft: #EFE7D8;
+    --orange: #E8722A;
+    --ink: #20241F;
+    --line: #D8CEBB;
+    --muted: #8A8F85;
+    --g-green: #3E8E5A;
+    --g-yellow: #E0A426;
+    --g-red: #C44536;
+    --g-gray: #CFC8B8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 18px 16px 48px; }
+  .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--orange); }
+  .eyebrow.muted { color: var(--muted); }
+  h1 { font-family: 'Fraunces', serif; font-weight: 700; font-size: 30px; color: var(--green); margin: 4px 0 0; line-height: 1.05; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 22px; margin-bottom: 24px; }
+  .card h2 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 20px; color: var(--ink); margin: 0 0 6px; }
+  .card p.hint { font-size: 14px; line-height: 1.55; color: var(--muted); margin: 0 0 14px; }
+  input, textarea {
+    width: 100%; font-family: 'DM Sans', sans-serif; font-size: 16px;
+    padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--line);
+    outline: none; background: #fff; color: var(--ink);
+  }
+  input:focus, textarea:focus { border-color: var(--orange); }
+  textarea { resize: none; }
+  .field { margin-bottom: 12px; }
+  label.small { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .btn {
+    width: 100%; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 16px;
+    padding: 16px 30px; border-radius: 99px; border: none; background: var(--orange);
+    color: #fff; cursor: pointer; transition: opacity .15s, background .2s;
+  }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.saved { background: var(--g-green); }
+  .btn-ghost {
+    font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--muted);
+    background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0;
+  }
+  .row-between { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .options { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+  .option {
+    display: flex; align-items: center; gap: 14px; text-align: left;
+    padding: 14px 16px; border-radius: 14px; cursor: pointer;
+    border: 1.5px solid var(--line); background: #fff; width: 100%;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .option.selected { border: 2.5px solid var(--ink); background: var(--cream-soft); }
+  .option.dim { opacity: .55; }
+  .dot { border-radius: 99px; flex-shrink: 0; display: inline-block; }
+  .option-label { font-weight: 700; font-size: 16px; color: var(--ink); }
+  .option-sub { font-size: 13px; color: var(--muted); }
+  .err { font-size: 13px; color: var(--g-red); margin: 8px 0 0; }
+  .board-item { background: #fff; border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+  .board-item.red { border-color: var(--g-red); }
+  .board-row { display: flex; align-items: center; gap: 12px; }
+  .board-name { font-weight: 700; font-size: 15.5px; color: var(--ink); }
+  .board-you { font-size: 11px; color: var(--orange); font-weight: 700; margin-left: 6px; }
+  .board-note { font-size: 13.5px; color: #5A5F57; line-height: 1.45; margin-top: 2px; overflow-wrap: break-word; }
+  .board-empty { font-size: 12px; color: var(--muted); margin-left: 4px; }
+  .trend { display: flex; gap: 5px; margin-top: 10px; margin-left: 28px; align-items: center; }
+  .trend .dot { width: 7px; height: 7px; }
+  .trend .dot.current { width: 10px; height: 10px; box-shadow: 0 0 0 2px var(--cream), 0 0 0 3.5px currentColor; }
+  .footer-note { font-size: 12.5px; line-height: 1.6; color: var(--muted); text-align: center; margin-top: 26px; }
+  .empty-board { background: #fff; border: 1px dashed var(--line); border-radius: 16px; padding: 26px; text-align: center; font-size: 14px; color: var(--muted); }
+  .loading { min-height: 60vh; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="loading">Loading the board...</div>
+</div>
+
+<script>
+const STATUS = {
+  green:  { color: "var(--g-green)",  hex: "#3E8E5A", label: "Green",  sub: "Moving forward" },
+  yellow: { color: "var(--g-yellow)", hex: "#E0A426", label: "Yellow", sub: "Unsure or slowed down" },
+  red:    { color: "var(--g-red)",    hex: "#C44536", label: "Red",    sub: "Stuck, I need input" },
+};
+const KEEP_WEEKS = 30;
+const ME_KEY = "hfos_me_v1";
+
+function isoWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  return d.getUTCFullYear() + "-W" + String(week).padStart(2, "0");
+}
+function lastNWeeks(n) {
+  const out = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i * 7);
+    out.push(isoWeek(d));
+  }
+  return out;
+}
+const thisWeek = isoWeek(new Date());
+const trendWeeks = lastNWeeks(8);
+
+function getMe() {
+  try { return JSON.parse(localStorage.getItem(ME_KEY) || "null"); } catch (e) { return null; }
+}
+function setMe(data) { localStorage.setItem(ME_KEY, JSON.stringify(data)); }
+function clearMe() { localStorage.removeItem(ME_KEY); }
+
+async function api(path, opts) {
+  const res = await fetch("/api/" + path, opts);
+  let data = {};
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw new Error(data.error || "Something went wrong.");
+  return data;
+}
+
+let state = {
+  me: getMe(),
+  members: [],
+  pickedColor: null,
+  note: "",
+  nameInput: "",
+  pinInput: "",
+  saving: false,
+  savedFlash: false,
+  err: "",
+};
+
+function render() {
+  const app = document.getElementById("app");
+  const me = state.me;
+  const myRecord = me ? state.members.find(m => m.slug === me.slug) : null;
+  const myEntry = myRecord && myRecord.logs && myRecord.logs[thisWeek];
+
+  const sorted = [...state.members].sort((a, b) => {
+    const rank = m => {
+      const e = m.logs && m.logs[thisWeek];
+      if (!e) return 1;
+      if (e.color === "red") return 0;
+      if (e.color === "yellow") return 2;
+      return 3;
+    };
+    return rank(a) - rank(b) || a.name.localeCompare(b.name);
+  });
+  const doneCount = state.members.filter(m => m.logs && m.logs[thisWeek]).length;
+
+  let identityHtml = "";
+  if (!me) {
+    identityHtml = `
+      <div class="card">
+        <h2>First time here? Tell us who you are.</h2>
+        <p class="hint">Pick a name and a private 4 digit code. The code lets you update your own status from any device, and stops anyone else touching it.</p>
+        <div class="field"><input id="nameInput" placeholder="Your name" value="${escapeAttr(state.nameInput)}" /></div>
+        <div class="field"><input id="pinInput" inputmode="numeric" maxlength="8" placeholder="Pick a 4 digit code" value="${escapeAttr(state.pinInput)}" /></div>
+        <button class="btn" id="claimBtn" ${state.saving ? "disabled" : ""}>${state.saving ? "Saving..." : "That's me"}</button>
+        ${state.err ? `<p class="err">${escapeHtml(state.err)}</p>` : ""}
+      </div>
+    `;
+  } else {
+    const optionsHtml = Object.entries(STATUS).map(([key, s]) => {
+      const selected = state.pickedColor === key;
+      const dim = state.pickedColor && !selected;
+      return `
+        <button class="option ${selected ? "selected" : ""} ${dim ? "dim" : ""}" data-color="${key}">
+          <span class="dot" style="width:22px;height:22px;background:${s.hex}"></span>
+          <span>
+            <div class="option-label">${s.label}</div>
+            <div class="option-sub">${s.sub}</div>
+          </span>
+        </button>
+      `;
+    }).join("");
+
+    identityHtml = `
+      <div class="card">
+        <div class="row-between">
+          <h2>${escapeHtml(me.name)}, how was your week?</h2>
+          <button class="btn-ghost" id="notYouBtn">Not you?</button>
+        </div>
+        <div class="options">${optionsHtml}</div>
+        <textarea id="noteInput" rows="2" maxlength="160" placeholder="One line: what are you working on this week?">${escapeHtml(state.note)}</textarea>
+        <div style="height:12px"></div>
+        <button class="btn ${state.savedFlash ? "saved" : ""}" id="saveBtn" ${state.saving || !state.pickedColor ? "disabled" : ""}>
+          ${state.saving ? "Saving..." : state.savedFlash ? "Saved. See you next Sunday." : (myEntry ? "Update my check-in" : "Save my check-in")}
+        </button>
+        ${state.err ? `<p class="err">${escapeHtml(state.err)}</p>` : ""}
+      </div>
+    `;
+  }
+
+  const boardItems = sorted.length === 0
+    ? `<div class="empty-board">Nobody on the board yet. Be the first.</div>`
+    : sorted.map(m => {
+        const entry = m.logs && m.logs[thisWeek];
+        const isMe = me && m.slug === me.slug;
+        const dotColor = entry ? STATUS[entry.color].hex : "#CFC8B8";
+        const trendDots = trendWeeks.map(w => {
+          const e = m.logs && m.logs[w];
+          const hex = e ? STATUS[e.color].hex : "#CFC8B8";
+          const current = w === thisWeek ? "current" : "";
+          return `<span class="dot ${current}" style="background:${hex};color:${hex}"></span>`;
+        }).join("");
+        return `
+          <div class="board-item ${entry && entry.color === "red" ? "red" : ""}">
+            <div class="board-row">
+              <span class="dot" style="width:16px;height:16px;background:${dotColor}"></span>
+              <div style="flex:1;min-width:0">
+                <div>
+                  <span class="board-name">${escapeHtml(m.name)}</span>
+                  ${isMe ? `<span class="board-you">you</span>` : ""}
+                  ${!entry ? `<span class="board-empty">no check-in yet</span>` : ""}
+                </div>
+                ${entry && entry.note ? `<div class="board-note">${escapeHtml(entry.note)}</div>` : ""}
+              </div>
+            </div>
+            <div class="trend">${trendDots}</div>
+          </div>
+        `;
+      }).join("");
+
+  app.innerHTML = `
+    <div style="margin-bottom:22px">
+      <div class="eyebrow">High Freedom OS</div>
+      <h1>Sunday Check-in</h1>
+    </div>
+    ${identityHtml}
+    <div class="row-between" style="margin-bottom:12px">
+      <div class="eyebrow muted">The board</div>
+      <span style="font-size:12px;color:var(--muted)">${doneCount} of ${state.members.length} checked in this week</span>
+    </div>
+    ${boardItems}
+    <p class="footer-note">You can only edit your own status. Everyone sees the board, that's the point. History stays for about 7 months.</p>
+  `;
+
+  wireEvents();
+}
+
+function wireEvents() {
+  const claimBtn = document.getElementById("claimBtn");
+  if (claimBtn) {
+    document.getElementById("nameInput").oninput = e => { state.nameInput = e.target.value; };
+    document.getElementById("pinInput").oninput = e => { state.pinInput = e.target.value; };
+    claimBtn.onclick = doClaim;
+  }
+  const notYouBtn = document.getElementById("notYouBtn");
+  if (notYouBtn) {
+    notYouBtn.onclick = () => {
+      clearMe();
+      state.me = null;
+      state.pickedColor = null;
+      state.note = "";
+      state.err = "";
+      render();
+    };
+  }
+  document.querySelectorAll(".option").forEach(btn => {
+    btn.onclick = () => {
+      state.pickedColor = btn.getAttribute("data-color");
+      render();
+    };
+  });
+  const noteInput = document.getElementById("noteInput");
+  if (noteInput) noteInput.oninput = e => { state.note = e.target.value; };
+  const saveBtn = document.getElementById("saveBtn");
+  if (saveBtn) saveBtn.onclick = doCheckin;
+}
+
+async function doClaim() {
+  const name = state.nameInput.trim();
+  const pin = state.pinInput.trim();
+  if (!name) { state.err = "Type your name first."; render(); return; }
+  if (pin.length < 4) { state.err = "Your code needs at least 4 digits."; render(); return; }
+  state.saving = true; state.err = ""; render();
+  try {
+    const data = await api("checkin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "claim", name, pin }),
+    });
+    setMe({ slug: data.member.slug, name: data.member.name, pin });
+    state.me = getMe();
+    state.members = state.members.filter(m => m.slug !== data.member.slug).concat([data.member]);
+    const entry = data.member.logs && data.member.logs[thisWeek];
+    if (entry) { state.pickedColor = entry.color; state.note = entry.note || ""; }
+  } catch (e) {
+    state.err = e.message;
+  }
+  state.saving = false;
+  render();
+}
+
+async function doCheckin() {
+  if (!state.pickedColor || !state.me) return;
+  state.saving = true; state.err = ""; render();
+  try {
+    const data = await api("checkin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "checkin",
+        name: state.me.name,
+        pin: state.me.pin,
+        color: state.pickedColor,
+        note: state.note,
+      }),
+    });
+    state.members = state.members.filter(m => m.slug !== data.member.slug).concat([data.member]);
+    state.savedFlash = true;
+    setTimeout(() => { state.savedFlash = false; render(); }, 2500);
+  } catch (e) {
+    state.err = e.message;
+  }
+  state.saving = false;
+  render();
+}
+
+function escapeHtml(str) {
+  return String(str || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+function escapeAttr(str) { return escapeHtml(str); }
+
+async function init() {
+  try {
+    const data = await api("board");
+    state.members = data.members || [];
+  } catch (e) {
+    state.members = [];
+  }
+  if (state.me) {
+    const mine = state.members.find(m => m.slug === state.me.slug);
+    const entry = mine && mine.logs && mine.logs[thisWeek];
+    if (entry) { state.pickedColor = entry.color; state.note = entry.note || ""; }
+  }
+  render();
+}
+
+init();
+</script>
+</body>
+</html>

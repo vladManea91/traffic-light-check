@@ -1,0 +1,9 @@
+{
+  "name": "high-freedom-os-checkin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sunday traffic light check-in board for High Freedom OS",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
